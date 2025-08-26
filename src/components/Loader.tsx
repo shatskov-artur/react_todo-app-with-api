@@ -3,13 +3,13 @@ import React from 'react';
 
 interface Props{
   todoId: number;
-  updatingTodoIds: number[];
+  loadingTodoIds: number[];
 }
 
 
 /* eslint-disable prettier/prettier */
-export const Loader: React.FC<Props> = ({todoId, updatingTodoIds}) => {
-  const isUpdating = updatingTodoIds.includes(todoId);
+export const Loader: React.FC<Props> = ({todoId, loadingTodoIds}) => {
+  const isUpdating = loadingTodoIds.includes(todoId);
 
   return (
     <div

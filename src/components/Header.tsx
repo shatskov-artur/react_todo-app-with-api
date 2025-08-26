@@ -28,15 +28,15 @@ export const Header: React.FC<Props> = ({
   }, [updatingTodoIds]);
 
   const handleToggleAllButton = (allTodos: Todo[]) => {
-    if (allTodos.some(todo => !todo.completed)) {
-      allTodos
-        .filter(todo => !todo.completed) // обновляем только те, что false
-        .forEach(todo => updateTodo({ ...todo, completed: true }));
-    } else {
-      allTodos
-        .filter(todo => todo.completed) // обновляем только те, что true
-        .forEach(todo => updateTodo({ ...todo, completed: false }));
-    }
+    const shouldComplete = allTodos.some(todo => !todo.completed);
+
+    const todosToUpdate = allTodos.filter(todo =>
+      shouldComplete ? !todo.completed : todo.completed,
+    );
+
+    todosToUpdate.forEach(todo =>
+      updateTodo({ ...todo, completed: shouldComplete }),
+    );
   };
 
   return (

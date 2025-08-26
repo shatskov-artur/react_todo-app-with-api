@@ -7,7 +7,7 @@ interface Props {
   todos: Todo[];
   updateTodo: (value: Todo) => Promise<void>;
   deleteTodo: (value: number) => Promise<void>;
-  updatingTodoIds: number[];
+  loadingTodoIds: number[];
 }
 
 /* eslint-disable prettier/prettier */
@@ -15,7 +15,7 @@ export const TodoList: React.FC<Props> = ({
   todos,
   updateTodo,
   deleteTodo,
-  updatingTodoIds,
+  loadingTodoIds,
 }) => {
   return (
     <section className="todoapp__main" data-cy="TodoList">
@@ -25,7 +25,7 @@ export const TodoList: React.FC<Props> = ({
           key={todo.id}
           updateTodo={updateTodo}
           deleteTodo={deleteTodo}
-          updatingTodoIds={updatingTodoIds}
+          loadingTodoIds={loadingTodoIds}
         />
       ))}
     </section>

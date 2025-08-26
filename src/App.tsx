@@ -1,26 +1,15 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
 /* eslint-disable jsx-a11y/control-has-associated-label */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Header } from './components/Header';
 import { TodoList } from './components/TodoList';
 import { Footer } from './components/Footer';
 import * as todoService from './api/todos';
 import { Todo } from './types/Todo';
+import { filterTodos } from './utils/filterTodos';
+import { TodoFilter } from './types/TodoFilter';
 
-const filterTodos = (initialTodos: Todo[], filter: string): Todo[] => {
-  const filteredTodos = [...initialTodos];
-
-  switch (filter) {
-    case 'completed':
-      return filteredTodos.filter(todo => todo.completed === true);
-    case 'active':
-      return filteredTodos.filter(todo => todo.completed === false);
-    default:
-      return initialTodos;
-  }
-};
-
-const countActive = (todos: Todo[]) => {
+const getActiveCount = (todos: Todo[]) => {
   return todos.filter(todo => todo.completed === false).length;
 };
 
@@ -28,8 +17,8 @@ export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [query, setQuery] = useState('');
   const [error, setError] = useState('');
-  const [filter, setFilter] = useState<'all' | 'completed' | 'active'>('all');
-  const [updatingTodoIds, setUpdatingTodoIds] = useState<number[]>([]);
+  const [filter, setFilter] = useState<TodoFilter>(TodoFilter.All);
+  const [loadingTodoIds, setLoadingTodoIds] = useState<number[]>([]);
   const [activeCount, setActiveCount] = useState<number>();
   const USER_ID = 3205;
 
@@ -38,7 +27,7 @@ export const App: React.FC = () => {
       .getTodos(USER_ID)
       .then(todosFromServer => {
         setTodos(todosFromServer);
-        setActiveCount(countActive(todosFromServer));
+        setActiveCount(getActiveCount(todosFromServer));
       })
       .catch(() => {
         setError('Unable to load todos');
@@ -46,15 +35,17 @@ export const App: React.FC = () => {
       });
   }, []);
 
-  const filteredTodos = filterTodos(todos, filter);
+  const filteredTodos = useMemo(() => {
+    return filterTodos(todos, filter);
+  }, [todos, filter]);
 
   useEffect(() => {
     if (error) {
       const timer = setTimeout(() => {
         setError('');
-      }, 3000); // 3 секунды
+      }, 3000);
 
-      return () => clearTimeout(timer); // очистка при размонтировании/смене ошибки
+      return () => clearTimeout(timer);
     }
   }, [error]);
 
@@ -66,7 +57,7 @@ export const App: React.FC = () => {
 
     setTodos(prev => [...prev, { ...newTodo, id: tempId }]);
 
-    setUpdatingTodoIds([tempId]);
+    setLoadingTodoIds([tempId]);
 
     return todoService
       .addTodo(newTodo)
@@ -76,7 +67,7 @@ export const App: React.FC = () => {
             todo.id === tempId ? addedTodo : todo,
           );
 
-          setActiveCount(countActive(updated));
+          setActiveCount(getActiveCount(updated));
 
           return updated;
         });
@@ -88,12 +79,12 @@ export const App: React.FC = () => {
         new Error('Unable to add a todo');
       })
       .finally(() => {
-        setUpdatingTodoIds([]);
+        setLoadingTodoIds([]);
       });
   };
 
   const deleteTodo = (todoId: number) => {
-    setUpdatingTodoIds([todoId]);
+    setLoadingTodoIds([todoId]);
 
     return todoService
       .deleteTodo(todoId)
@@ -101,7 +92,7 @@ export const App: React.FC = () => {
         setTodos(currentTodos => {
           const updated = currentTodos.filter(todo => todo.id !== todoId);
 
-          setActiveCount(countActive(updated));
+          setActiveCount(getActiveCount(updated));
 
           return updated;
         });
@@ -111,12 +102,12 @@ export const App: React.FC = () => {
         throw new Error('Unable to delete a todo');
       })
       .finally(() => {
-        setUpdatingTodoIds([]);
+        setLoadingTodoIds([]);
       });
   };
 
   const updateTodo = (updatedTodo: Todo) => {
-    setUpdatingTodoIds(prev => [...prev, updatedTodo.id]);
+    setLoadingTodoIds(prev => [...prev, updatedTodo.id]);
 
     return todoService
       .updateTodo(updatedTodo)
@@ -126,7 +117,7 @@ export const App: React.FC = () => {
           const index = newTodos.findIndex(todo => todo.id === updatedTodo.id);
 
           newTodos.splice(index, 1, newTodo);
-          setActiveCount(countActive(newTodos));
+          setActiveCount(getActiveCount(newTodos));
 
           return newTodos;
         });
@@ -136,7 +127,7 @@ export const App: React.FC = () => {
         throw new Error('Unable to update a todo');
       })
       .finally(() => {
-        setUpdatingTodoIds(prev => prev.filter(id => id !== updatedTodo.id));
+        setLoadingTodoIds(prev => prev.filter(id => id !== updatedTodo.id));
       });
   };
 
@@ -169,7 +160,7 @@ export const App: React.FC = () => {
       <div className="todoapp__content">
         <Header
           query={query}
-          updatingTodoIds={updatingTodoIds}
+          updatingTodoIds={loadingTodoIds}
           setQuery={setQuery}
           todos={todos}
           handleSubmit={handleSubmit}
@@ -180,7 +171,7 @@ export const App: React.FC = () => {
             todos={filteredTodos}
             updateTodo={updateTodo}
             deleteTodo={deleteTodo}
-            updatingTodoIds={updatingTodoIds}
+            loadingTodoIds={loadingTodoIds}
           />
         )}
 

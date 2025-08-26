@@ -7,7 +7,7 @@ interface Props {
   todo: Todo;
   updateTodo: (value: Todo) => Promise<void>;
   deleteTodo: (value: number) => Promise<void>;
-  updatingTodoIds: number[];
+  loadingTodoIds: number[];
 }
 
 /* eslint-disable prettier/prettier */
@@ -15,7 +15,7 @@ export const TodoItem: React.FC<Props> = ({
   todo,
   updateTodo,
   deleteTodo,
-  updatingTodoIds,
+  loadingTodoIds,
 }) => {
   const [focusedTodo, setFocusedTodo] = useState<Todo>();
   const [todoTitleField, setTodoTitleFild] = useState('');
@@ -134,7 +134,7 @@ export const TodoItem: React.FC<Props> = ({
 
       {/* overlay will cover the todo while it is being deleted or updated */}
 
-      <Loader todoId={todo.id} updatingTodoIds={updatingTodoIds} />
+      <Loader todoId={todo.id} loadingTodoIds={loadingTodoIds} />
     </div>
   );
 };
